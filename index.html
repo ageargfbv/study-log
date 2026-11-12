@@ -358,7 +358,7 @@ function recGroups(list){
   return out+'</ul>';
 }
 function chips(){var cur=curSubject();
-  if(!state.settings.subjects.length)return '<p class="empty">科目がありません。設定で追加してください。</p>';
+  if(!state.settings.subjects.length)return '<p class="empty">科目がありません。</p>';
   return '<div class="chips" role="group" aria-label="科目">'+state.settings.subjects.map(function(s){return '<button class="chip" data-act="pick" data-id="'+esc(s.id)+'" aria-pressed="'+(s.id===cur)+'"><i class="dot" style="background:'+PALETTE[s.color]+'"></i>'+esc(s.name)+'</button>';}).join("")+'</div>';}
 
 /* ---------- extras: review, todo, goal, accuracy, calendar ---------- */
@@ -376,7 +376,7 @@ function takeExtra(){var e=ui.extra,q=parseInt(e.q,10)||0,c=parseInt(e.c,10)||0;
   if(c>q){toast("正解数が問題数を超えています");return null;}
   ui.extra={q:"",c:"",rv:false};var cx=recCtx();return {q:q,c:c,rv:!!e.rv,subjectId:cx.subjectId,unitId:cx.unitId,bookId:cx.bookId,chId:cx.chId};}
 function extras(){var e=ui.extra;
-  return '<label class="check" for="x-rv"><input id="x-rv" type="checkbox" data-x="rv"'+(e.rv?' checked':'')+'>あとで復習する(1日後・7日後・30日後にホームへ表示)</label>';}
+  return '<label class="check" for="x-rv"><input id="x-rv" type="checkbox" data-x="rv"'+(e.rv?' checked':'')+'>あとで復習する</label>';}
 function unit(sid,uid){var s=subj(sid);if(!s||!uid)return null;for(var i=0;i<s.units.length;i++)if(s.units[i].id===uid)return s.units[i];return null;}
 function label(sid,uid){var u=unit(sid,uid);return sname(sid)+(u?" › "+u.name:"");}
 function md(k){var d=parse(k);return (d.getMonth()+1)+"/"+d.getDate();}
@@ -389,7 +389,7 @@ function matPicker(){var list=bookList(),cx=recCtx(),b=cx.bookId?state.books[cx.
   if(list.length){h+='<h2>教材</h2><select id="mat-sel" data-msel="book" aria-label="教材"><option value="">本棚の教材を使わない</option>'+["out","in"].map(function(kd){
       var bl=list.filter(function(x){return kindOf(x)===kd&&subj(x.subjectId);});
       return bl.length?'<optgroup label="'+KIND[kd]+'">'+bl.map(function(x){return '<option value="'+esc(x.id)+'"'+(b&&x.id===b.id?' selected':'')+'>'+esc(x.name+"("+sname(x.subjectId)+")")+'</option>';}).join("")+'</optgroup>':'';}).join("")+'</select>';}
-  else h+='<p class="note">本棚に問題集やテキストを入れると、ここで教材と論点を選んで記録できます。</p>';
+  else h+='';
   if(b)return h+'<h2>論点</h2>'+(b.ch.length?'<select id="mat-ch" data-msel="ch" aria-label="論点"><option value="">指定なし</option>'+b.ch.map(function(c){return '<option value="'+esc(c.id)+'"'+(c.id===cx.chId?' selected':'')+'>'+esc(c.name)+'</option>';}).join("")+'</select>':'<p class="empty">この教材にはまだ論点がありません。</p>')+
     '<p class="note">科目は「'+esc(sname(b.subjectId))+'」として記録します。</p>';
   return h+'<h2>科目</h2>'+chips()+unitPicker();}
@@ -406,7 +406,7 @@ function resumeCard(){if(state.settings.timer)return "";var seen={},items=[];
     var b=state.books[r.bookId],c=b&&Array.isArray(b.ch)&&subj(b.subjectId)&&chOf(b,r.chId),key=r.bookId+":"+r.chId;
     if(c&&!seen[key]&&items.length<3){seen[key]=1;items.push({b:b,c:c});}});
   bookList().forEach(function(b){var c=b.ch[0];if(c&&subj(b.subjectId)&&items.length<3&&!items.some(function(x){return x.b.id===b.id;}))items.push({b:b,c:c});});
-  if(!items.length)return '<section class="card"><h2>すぐ始める</h2><p class="empty">本棚に教材と論点を入れると、ここから1回押すだけで学習を始められます。</p><button class="cta" data-act="go-books">本棚に教材を入れる</button></section>';
+  if(!items.length)return '<section class="card"><h2>すぐ始める</h2><button class="cta" data-act="go-books">本棚に教材を入れる</button></section>';
   return '<section class="card"><h2>すぐ始める</h2>'+items.map(function(x){
     return '<button class="resume" data-act="resume" data-id="'+esc(x.b.id+":"+x.c.id)+'"><span><b>'+esc(x.c.name)+'</b><small>'+esc(x.b.name)+'</small></span><i>▶ 開始</i></button>';}).join("")+
     '<button class="ghost" data-act="go-books">ほかの教材から始める</button></section>';}
@@ -447,11 +447,11 @@ function homeExtras(tk,all){
       return '<div class="todo'+(x.done?' done':'')+'"><input id="td-'+esc(x.id)+'" type="checkbox" data-todo="'+esc(x.id)+'"'+(x.done?' checked':'')+' aria-label="完了にする"><span>'+
         (has?'<b><i class="dot" style="background:'+scolor(x.subjectId)+'"></i> '+esc(label(x.subjectId,x.unitId))+'</b>'+(x.text?'<small>'+esc(x.text)+'</small>':''):'<b>'+esc(x.text)+'</b>')+'</span>'+
         (has&&!x.done?'<button class="mini" data-act="todo-rec" data-id="'+esc(x.id)+'">記録する</button>':'<span></span>')+'</div>';}).join("")+'</div>'
-      :'<p class="empty">科目と範囲を選んで、やることを登録できます。</p>')+
+      :'<p class="empty">やることはまだありません。</p>')+
     (ts?'<div class="row"><label for="todo-sub">科目<select id="todo-sub" data-t="sub">'+s.subjects.map(function(x){return '<option value="'+esc(x.id)+'"'+(x.id===ts.id?' selected':'')+'>'+esc(x.name)+'</option>';}).join("")+'</select></label>'+
       '<label for="todo-unit">範囲<select id="todo-unit" data-t="unit"><option value="">指定なし</option>'+ts.units.map(function(u){return '<option value="'+esc(u.id)+'"'+(u.id===ui.todoUnit?' selected':'')+'>'+esc(u.name)+'</option>';}).join("")+'</select></label></div>'+
       '<div class="addrow"><input id="todo-new" data-f="todo" value="'+esc(ui.todo)+'" placeholder="内容(任意) 例: 答練 第3回の解き直し" maxlength="60" aria-label="やることの内容"><button class="ghost" data-act="todo-add">追加</button></div>'
-      :'<p class="empty">先に設定で科目を追加してください。</p>')+
+      :'<p class="empty">科目がありません。</p>')+
     (s.todos.some(function(x){return x.done;})?'<button class="ghost" data-act="todo-clear">完了したものを消す</button>':'')+'</section>';
   if(s.totalGoalMin>0){
     var pct=Math.min(1,all/s.totalGoalMin),rest=Math.max(0,s.totalGoalMin-all),line;
@@ -472,7 +472,7 @@ function calCard(map,from,to){var max=60,d,x;
   for(var i=(from.getDay()+6)%7;i>0;i--)h+='<div></div>';
   for(d=from;d<=to;d=addDays(d,1)){var k=dkey(d),t=map[k]?map[k].total:0;
     h+='<span'+(k===tk?' class="now"':'')+' title="'+(d.getMonth()+1)+'/'+d.getDate()+' '+fmt(t)+'">'+(t?'<i style="opacity:'+(0.14+t/max*0.46).toFixed(2)+'"></i>':'')+'<u>'+d.getDate()+'</u>'+(t?'<u class="num">'+hrs(t)+'</u>':'')+'</span>';}
-  return h+'</div><p class="note">色が濃い日ほど学習時間が長い日です。</p></section>';}
+  return h+'</div></section>';}
 
 /* ---------- bookshelf: book > topic (論点) > problem ---------- */
 var RES={o:"○",t:"△",x:"×"},KIND={out:"アウトプット","in":"インプット"};
@@ -510,10 +510,10 @@ function viewBooks(){
   var shelfOf=function(title,bl){var rows="",i;
     for(i=0;i<Math.max(bl.length,1);i+=3)rows+='<div class="srow">'+bl.slice(i,i+3).map(function(b,j){return tile(b,i+j);}).join("")+'</div>';
     return '<div class="case"><span class="plate">'+title+(bl.length?' '+bl.length+'冊':'')+'</span>'+rows+'</div>';};
-  if(!list.length)h+=shelfOf("本棚",[])+'<p class="note">まだ本がありません。下から教材を追加すると、ここに並びます。本の中の論点ごとに、1問ずつ ○△× と解いた日、間違えた内容を残せます。</p>';
+  if(!list.length)h+=shelfOf("本棚",[])+'<p class="note">まだ本がありません。</p>';
   [["out","アウトプット(問題集・答練)"],["in","インプット(テキスト・講義)"]].forEach(function(g){var bl=list.filter(function(b){return kindOf(b)===g[0];});
     if(bl.length)h+=shelfOf(g[1],bl);});
-  if(list.some(function(b){var st=bookStats(b);return st.t+st.x;}))h+='<p class="note">本の右上の赤い数字は、解き直す問題の数です。</p>';
+  if(list.some(function(b){var st=bookStats(b);return st.t+st.x;}))h+='';
   if(!subj(k.sub))k.sub=(s.subjects[0]||{}).id||"";
   var bs=subj(k.sub);
   h+='<section class="card"><h2>本棚に問題集を追加</h2>'+(bs?
@@ -521,7 +521,7 @@ function viewBooks(){
     '<label for="b-name">問題集の名前<input id="b-name" data-b="name" value="'+esc(k.name)+'" placeholder="例: 問題集1" maxlength="40"></label></div>'+
     kindSeg("bk-kind",k.kind==="in"?"in":"out")+
     '<button class="cta" data-act="book-add">追加して論点を登録する</button>'
-    :'<p class="empty">先に設定で科目を追加してください。</p>')+'</section>';
+    :'<p class="empty">科目がありません。</p>')+'</section>';
   return h;
 }
 function viewBook(b){
@@ -538,13 +538,13 @@ function viewBook(b){
         if(ui.bookFilter==="rev"&&!po&&!noting&&!(l&&l.r!=="o"))continue;
         rows+='<div class="prow"><button class="pinfo" data-act="prob" data-id="'+i+'" aria-expanded="'+po+'"><b>問'+i+'</b><span class="cells">'+(a.length?a.map(function(x){return gl(x.r);}).join(""):"")+'<small>'+(l?md(l.d):"未着手")+'</small></span></button>'+
           '<span class="qk" role="group" aria-label="問'+i+'の結果">'+["o","t","x"].map(function(r){return '<button class="'+r+'" data-act="quick" data-id="'+i+':'+r+'" aria-label="問'+i+' '+RES[r]+'">'+RES[r]+'</button>';}).join("")+'</span></div>';
-        if(noting)rows+='<label class="qnote" for="q-note">問'+i+' '+RES[l.r]+' の間違えた内容(任意・書くと自動で保存)<textarea id="q-note" data-qn="'+i+'" rows="2" maxlength="300" placeholder="例: のれんの償却を忘れた">'+esc(l.n)+'</textarea></label>';
+        if(noting)rows+='<label class="qnote" for="q-note">問'+i+' '+RES[l.r]+' の間違えた内容<textarea id="q-note" data-qn="'+i+'" rows="2" maxlength="300" placeholder="例: のれんの償却を忘れた">'+esc(l.n)+'</textarea></label>';
         else if(!po&&l&&l.n)rows+='<p class="pnote">'+esc(l.n)+'</p>';
         if(po){
           rows+='<div class="pbox">'+(a.length?'<div>'+a.map(function(x){var ck="a"+x.i;
               return '<div class="att">'+gl(x.r)+'<span class="num">'+md(x.d)+'</span><span>'+esc(x.n)+'</span><button class="mini" data-act="att-del" data-id="'+x.i+'">'+(ui.confirmDel===ck?"本当に削除":"削除")+'</button></div>';}).join("")+'</div>'+
-              '<label for="q-note">最新の記録のメモ(書くと自動で保存)<textarea id="q-note" data-qn="'+i+'" rows="2" maxlength="300" placeholder="例: のれんの償却を忘れた">'+esc(l.n)+'</textarea></label>'
-              :'<p class="empty">まだ記録がありません。右の ○△× を押すと保存されます。</p>')+'</div>';
+              '<label for="q-note">最新の記録のメモ<textarea id="q-note" data-qn="'+i+'" rows="2" maxlength="300" placeholder="例: のれんの償却を忘れた">'+esc(l.n)+'</textarea></label>'
+              :'<p class="empty">まだ記録がありません。</p>')+'</div>';
         }
       }
       if(!rows)rows='<p class="empty">この論点に解き直す問題はありません。</p>';
@@ -553,20 +553,20 @@ function viewBook(b){
     }
     body+='<section class="card plist"><div class="chrow"><button class="chead" data-act="ch" data-id="'+esc(c.id)+'" aria-expanded="'+open+'"><span><b>'+esc(c.name)+'</b><small>'+c.count+'問 ・ ○ '+st.o+' ・ △ '+st.t+' ・ × '+st.x+' ・ 未着手 '+st.none+'</small></span><i class="chev">'+(open?"▾":"▸")+'</i>'+(open?'':'<span class="cells">'+cells+'</span>')+'</button>'+(!open&&!state.settings.timer?'<button class="go" data-act="ch-go" data-id="'+esc(c.id)+'" aria-label="'+esc(c.name)+'のタイマーを開始">▶</button>':'')+'</div>'+rows+'</section>';
   });
-  if(!b.ch.length)body='<section class="card"><p class="empty">まだ論点がありません。下の「論点を追加」から登録してください。</p></section>';
+  if(!b.ch.length)body='<section class="card"><p class="empty">まだ論点がありません。</p></section>';
   else if(!body)body='<section class="card"><p class="empty">解き直しが必要な問題はありません。</p></section>';
   var used={};b.ch.forEach(function(c){used[c.name]=1;});
   var sug=s?s.units.filter(function(u){return !used[u.name];}):[];
   return '<div class="top"><div><button class="mini" data-act="book-back">‹ 本棚</button><h1>'+esc(b.name)+'</h1><small>'+esc(KIND[kindOf(b)]+" ・ "+sname(b.subjectId)+" ・ 論点 "+b.ch.length+" ・ "+total+"問")+'</small></div></div>'+
     ((state.settings.timer&&!(state.settings.timer.bookId===b.id&&state.settings.timer.chId===ui.chId))?runBanner():'')+(b.ch.length?'<div class="seg" role="group" aria-label="表示する問題"><button data-act="book-filter" data-id="all" aria-pressed="'+(ui.bookFilter!=="rev")+'">すべて('+total+')</button><button data-act="book-filter" data-id="rev" aria-pressed="'+(ui.bookFilter==="rev")+'">△×のみ('+nrev+')</button></div>'+
       '<section class="card"><label class="check bdate" for="bk-date">解いた日<input id="bk-date" type="date" data-bd="1" value="'+esc(ui.bookDate)+'" max="'+today+'"></label>'+
-      '<p class="note">論点を押して開き、○△× を押すとその場で保存します。問題番号を押すと履歴の確認と削除ができます。</p></section>':'')+
+      '</section>':'')+
     body+
     '<section class="card"><h2>論点を追加</h2>'+(sug.length?
       '<div class="row"><label for="c-unit">範囲<select id="c-unit" data-b="chUnit"><option value="">範囲を選ぶ</option>'+sug.map(function(u){return '<option value="'+esc(u.name)+'"'+(u.name===k.chUnit?' selected':'')+'>'+esc(u.name)+'</option>';}).join("")+'</select></label>'+
       '<label for="c-count" style="flex:0 0 96px">問題数<input id="c-count" type="number" inputmode="numeric" min="1" max="200" data-b="chCount" value="'+esc(k.chCount)+'"></label></div>'+
       '<button class="cta" data-act="ch-add">論点を追加</button>'
-      :'<p class="empty">'+(s&&s.units.length?'登録済みの範囲はすべて追加済みです。':'この科目の範囲がまだありません。設定で範囲を登録すると、ここから論点として追加できます。')+'</p>')+
+      :'<p class="empty">'+(s&&s.units.length?'登録済みの範囲はすべて追加済みです。':'この科目の範囲がまだありません。')+'</p>')+
       '<button class="ghost" data-act="go-setup">設定で範囲を追加</button></section>'+
     '<section class="card"><h2>この問題集の設定</h2><label for="bm-name">名前<input id="bm-name" data-bm="name" value="'+esc(b.name)+'" maxlength="40"></label>'+
     kindSeg("book-kind",kindOf(b))+
@@ -604,7 +604,7 @@ function viewRecord(){
       '<label for="t-memo">メモ(任意)<input id="t-memo" data-f="memo" value="'+esc(ui.memo)+'" placeholder="例: 連結会計 答練 第3回" maxlength="100"></label>'+extras()+
       (t?'<button class="cta" data-act="stop">終了して記録する</button><button class="ghost" data-act="pause">'+(t.pausedAt?"再開する":"一時停止")+'</button><button class="ghost" data-act="discard">'+(ui.confirmDel==="timer"?"本当に破棄する":"記録せずに破棄")+'</button>'
         :'<button class="cta" data-act="start">学習スタート</button>')+
-      '<p class="note">計測中は画面を閉じても時間は進みます。</p>';
+      '';
   }else{
     body='<label for="f-date">日付<input id="f-date" type="date" data-f="date" value="'+esc(f.date)+'" max="'+dkey(new Date())+'"></label>'+
       '<div class="row"><label for="f-h">時間<input id="f-h" type="number" inputmode="numeric" min="0" max="24" data-f="h" value="'+esc(f.h)+'" placeholder="0"></label><label for="f-m">分<input id="f-m" type="number" inputmode="numeric" min="0" max="59" data-f="m" value="'+esc(f.m)+'" placeholder="0"></label></div>'+
@@ -643,9 +643,9 @@ function viewSetup(){
   var ba=backupAt(),bd=ba?new Date(ba):null;
   return '<div class="top"><h1>設定</h1></div>'+
   '<section class="card"><h2>目標</h2><label for="s-exam">試験名<input id="s-exam" data-s="examName" value="'+esc(s.examName)+'" maxlength="30"></label>'+
-    '<div class="row"><label for="s-date">試験日<input id="s-date" type="date" data-s="examDate" value="'+esc(s.examDate)+'"></label><label for="s-goal">週の目標(時間)<input id="s-goal" type="number" inputmode="decimal" min="0" max="168" step="0.5" data-s="goal" value="'+(Math.round(s.weeklyGoalMin/6)/10)+'"></label></div><label for="s-total">合計の目標時間(0にすると表示しません)<input id="s-total" type="number" inputmode="numeric" min="0" max="9999" data-s="total" value="'+Math.round((s.totalGoalMin||0)/60)+'"></label></section>'+
+    '<div class="row"><label for="s-date">試験日<input id="s-date" type="date" data-s="examDate" value="'+esc(s.examDate)+'"></label><label for="s-goal">週の目標(時間)<input id="s-goal" type="number" inputmode="decimal" min="0" max="168" step="0.5" data-s="goal" value="'+(Math.round(s.weeklyGoalMin/6)/10)+'"></label></div><label for="s-total">合計の目標時間<input id="s-total" type="number" inputmode="numeric" min="0" max="9999" data-s="total" value="'+Math.round((s.totalGoalMin||0)/60)+'"></label></section>'+
   '<section class="card"><h2>科目</h2>'+s.subjects.map(function(x){return '<div class="subj"><button class="sw" style="background:'+PALETTE[x.color]+'" data-act="color" data-id="'+esc(x.id)+'" aria-label="'+esc(x.name)+'の色を変える"></button><input id="sub-'+esc(x.id)+'" data-sub="'+esc(x.id)+'" value="'+esc(x.name)+'" maxlength="20" aria-label="科目名"><button class="ghost danger" data-act="del-sub" data-id="'+esc(x.id)+'">'+(ui.confirmSub===x.id?"本当に削除":"削除")+'</button></div>'+unitFold(x);}).join("")+
-    '<button class="ghost" data-act="add-sub">科目を追加</button><p class="note">色の四角を押すと色が変わります。科目を削除しても過去の記録は残ります。「範囲」を押すと開き、追加と削除ができます(範囲名を押すと削除)。</p></section>'+
+    '<button class="ghost" data-act="add-sub">科目を追加</button></section>'+
   '<section class="card"><h2>バックアップ</h2><p class="note">記録はこの端末の中だけに保存しています。'+(bd?'最後の書き出し '+(bd.getMonth()+1)+'/'+bd.getDate():'まだ書き出していません')+'</p>'+
     '<div class="row"><button class="ghost" data-act="backup">書き出す</button><button class="ghost" data-act="restore">読み込む</button></div></section>';
 }
